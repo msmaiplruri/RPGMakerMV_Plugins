@@ -10,11 +10,11 @@
  */
 
 /*:ja
-* @plugindesc メニュー画面に経過時間を表示します。
-* @auther masami
-* 
-* @help このプラグインには、プラグインコマンドはありません。
-*/
+ * @plugindesc メニュー画面に経過時間を表示します。
+ * @author masami
+ * 
+ * @help このプラグインには、プラグインコマンドはありません。
+ */
 
 (function () {
     function Window_ElapsedTime() {
