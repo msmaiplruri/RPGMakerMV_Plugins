@@ -3,7 +3,7 @@
 //=============================================================================
 
 /*:
- * @plugindesc This allows you to cancel by typing the backspace key.
+ * @plugindesc This allows player to cancel by typing the backspace key.
  * @author masami
  *
  * @help This plugin does not provide plugin commands.
