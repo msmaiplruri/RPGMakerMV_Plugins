@@ -34,7 +34,8 @@
         this._actorCommandWindow.setHandler('escape', this.commandEscape.bind(this));
     };
 
+    var _Window_ActorCommand_numVisibleRows = Window_ActorCommand.prototype.numVisibleRows;
     Window_ActorCommand.prototype.numVisibleRows = function() {
-        return 4 + 1;
+        return _Window_ActorCommand_numVisibleRows.call(this) + 1;
     };
 })();
