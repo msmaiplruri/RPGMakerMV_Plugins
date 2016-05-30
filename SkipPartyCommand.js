@@ -10,7 +10,7 @@
  */
 
 /*:ja
- * @plugindesc 戦闘開始時、PartyCommandを飛ばします。(「戦う」を選んだ時と同じ扱いです。)
+ * @plugindesc 戦闘開始時、PartyCommandを飛ばします。(「戦う」を選んだ時と同じ扱いになります。)
  * @author masami
  *
  * @help このプラグインには、プラグインコマンドはありません。
