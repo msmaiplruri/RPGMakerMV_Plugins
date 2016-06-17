@@ -32,6 +32,14 @@ var is_fase = params['is_fase'];
         return 4;
     };
 
+    Window_BattleStatus.prototype.numVisibleRows = function() {
+        if (is_fase !== "false" || $dataSystem.optDisplayTp) {
+            return 4;
+        } else {
+            return 3;
+        }
+    };
+
     // Actor選択時の縦幅をウィンドウ全体に広げる
     var _Window_BattleStatus_itemRect = Window_BattleStatus.prototype.itemRect;
     Window_BattleStatus.prototype.itemRect = function(index) {
@@ -61,8 +69,11 @@ var is_fase = params['is_fase'];
     };
 
     Window_BattleStatus.prototype.drawGaugeAreaWithoutTp = function(rect, actor) {
-        this.drawActorHp(actor, rect.x, rect.y + 70,  130);
-        this.drawActorMp(actor, rect.x, rect.y + 105, 130);
+        var dy;
+        if (is_fase !== "false") dy = 70;
+        else dy = 35;
+        this.drawActorHp(actor, rect.x, rect.y + dy,  130);
+        this.drawActorMp(actor, rect.x, rect.y + dy + 35, 130);
     };
 
     Window_BattleStatus.prototype.basicAreaRect = function(index) {
