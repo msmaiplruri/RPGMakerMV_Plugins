@@ -40,6 +40,14 @@ var is_fase = params['is_fase'];
         }
     };
 
+    Window_BattleEnemy.prototype.numVisibleRows = function() {
+        if (is_fase !== "false" || $dataSystem.optDisplayTp) {
+            return 4;
+        } else {
+            return 3;
+        }
+    };
+
     // Actor選択時の縦幅をウィンドウ全体に広げる
     var _Window_BattleStatus_itemRect = Window_BattleStatus.prototype.itemRect;
     Window_BattleStatus.prototype.itemRect = function(index) {
