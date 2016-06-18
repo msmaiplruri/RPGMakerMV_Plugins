@@ -50,8 +50,6 @@ var is_fase = params['is_fase'];
 
     Window_BattleStatus.prototype.itemRectForText = function(index) {
         var rect = this.itemRect(index);
-        console.log(rect);
-        console.log(this.windowWidth() / this.numVisibleRows());
         rect.x += (rect.width - 144) / 2;
         return rect;
     };
