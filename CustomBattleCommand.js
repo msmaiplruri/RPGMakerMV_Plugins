@@ -27,6 +27,7 @@
     };
 
     // Scene_Custom
+    // TODO: コマンド位置記憶
 
     function Scene_Custom() {
         this.initialize.apply(this, arguments);
@@ -464,6 +465,16 @@
     var _Game_Actor_initMembers = Game_Actor.prototype.initMembers;
     Game_Actor.prototype.initMembers = function() {
         _Game_Actor_initMembers.call(this);
+        this._lastBattleItemIndex = -1;
+    };
+
+    // 最後に選んだアイテムインデックスを保持
+    Game_Actor.prototype.lastBattleItemIndex = function() {
+        return this._lastBattleItemIndex;
+    };
+
+    Game_Actor.prototype.setLastBattleItemIndex = function(index) {
+        this._lastBattleItemIndex = index;
     };
 
     var _Game_Actor_setup = Game_Actor.prototype.setup;
@@ -487,6 +498,7 @@
     Game_Actor.prototype.changeCustom = function(slotId, item) {
         var custom = this._customs[slotId].object();
 
+        // 重複チェック
         var dup = -1;
         for (var i = 0; i < this.maxCustom(); ++i) {
             if (this._customs[i].object() === item) {
@@ -516,11 +528,23 @@
         this.refresh();
     };
 
+    Game_Actor.prototype.deleteCustom = function(index) {
+        if (index >= 0 && index < this.maxCustom()) {
+            this._customs[index].setObject(null);
+        }
+    };
+
     Game_Actor.prototype.maxCustom = function() {
         return 6;
     };
 
-    // TODO: 戦闘時、カスタムからコマンドを選ぶようにする
+    // 持ち物にアイテムが無くても使用可能にする
+    Game_Actor.prototype.meetsItemConditions = function(item) {
+        return this.meetsUsableItemConditions(item);
+    };
+
+    // 戦闘時、カスタムからコマンドを選ぶようにする
+    // TODO: MPコスト、アイテムかどうか表示
 
     var _Scene_Battle_createAllWindows = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
@@ -528,6 +552,71 @@
         this._actorCommandWindow.setHelpWindow(this._helpWindow);
     };
 
+    var _Scene_Battle_startActorCommandSelection = Scene_Battle.prototype.startActorCommandSelection;
+    Scene_Battle.prototype.startActorCommandSelection = function() {
+        _Scene_Battle_startActorCommandSelection.call(this);
+        this.createCustomHandler();
+    };
+
+    Scene_Battle.prototype.createCustomHandler = function() {
+        var actor = BattleManager.actor();
+        var maxCustom = actor.maxCustom();
+        var key = 0;
+        for (var i = 0; i < maxCustom; ++i) {
+            var custom = actor.customs()[i];
+            if (custom.isNull()) continue;
+            var obj = custom.object();
+            this._actorCommandWindow.setHandler(
+                obj.name + "_" + key++,
+                this.commandCustom.bind(this, custom, i)
+            );
+        }
+    };
+
+    Scene_Battle.prototype.commandCustom = function(custom, index) {
+        var c = custom.object();
+        console.log(index);
+        if (custom.isSkill()) {
+            BattleManager.inputtingAction().setSkill(c.id);
+        } else if (custom.isItem()) {
+            BattleManager.inputtingAction().setItem(c.id);
+            BattleManager.actor().setLastBattleItemIndex(index);
+        }
+        this.onSelectAction();
+    };
+
+    Scene_Battle.prototype.onSelectAction = function() {
+        var action = BattleManager.inputtingAction();
+        // TODO: 全体技なら全体を選択
+        if (!action.needsSelection()) {
+            this.selectNextCommand();
+        } else if (action.isForOpponent()) {
+            this.selectEnemySelection();
+        } else {
+            this.selectActorSelection();
+        }
+    };
+
+    // 戦闘中、アイテムを消費する際にカスタムから消費し、アイテム欄からは消費しない
+    BattleManager.startAction = function() {
+        var subject = this._subject;
+        var action = subject.currentAction();
+        var targets = action.makeTargets();
+        this._phase = 'action';
+        this._action = action;
+        this._targets = targets;
+        if (action.isItem()) {
+            var index = subject.lastBattleItemIndex();
+            subject.deleteCustom(index);
+        } else {
+            subject.useItem(action.item());
+        }
+        this._action.applyGlobal();
+        this.refreshStatus();
+        this._logWindow.startAction(subject, action, targets);
+    };
+
+    // コマンドウィンドウの高さをコマンド数に応じて変更する
     Window_ActorCommand.prototype.setup = function(actor) {
         this._actor = actor;
         this.move(this.x, this.y, this.width, this.windowHeight());
@@ -539,6 +628,13 @@
         this.open();
     };
 
+    Window_ActorCommand.prototype.numVisibleRows = function() {
+        var customs = this._actor ? this._actor.customs().filter(function(custom) {
+            return !custom.isNull();
+        }, this) : [];
+        return this._actor ? customs.length + 2 : 8;
+    };
+
     Window_ActorCommand.prototype.makeCommandList = function() {
         if (this._actor) {
             this.addAttackCommand();
@@ -547,6 +643,7 @@
         }
     };
 
+    // 「攻撃」を所持武器名にする
     Window_ActorCommand.prototype.addAttackCommand = function() {
         var first = this._actor.equips()[0];
         var weapon = first ? first.name : "素手"
@@ -559,15 +656,13 @@
         }, this);
         for (var i = 0; i < customs.length; ++i) {
             var custom = customs[i].object();
-            this.addCommand(custom.name, custom.name, this._actor.canUse(custom));
+            var symbol = custom.name + "_" + i;
+            if (customs[i].isItem()) {
+                this.addCommand(custom.name, symbol, true);
+            } else {
+                this.addCommand(custom.name, symbol, this._actor.canUse(custom));
+            }
         }
-    };
-
-    Window_ActorCommand.prototype.numVisibleRows = function() {
-        var customs = this._actor ? this._actor.customs().filter(function(custom) {
-            return !custom.isNull();
-        }, this) : [];
-        return this._actor ? customs.length + 2 : 8;
     };
 
     Window_ActorCommand.prototype.item = function() {
@@ -579,9 +674,17 @@
         return customs[index].object();
     };
 
+    // カスタムコマンドの説明をhelpWindowに表示する
     Window_ActorCommand.prototype.updateHelp = function() {
         Window_Command.prototype.updateHelp.call(this);
         this.setHelpWindowItem(this.item());
+    };
+
+    // 防御の時、ログを非表示
+    var _Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
+    Window_BattleLog.prototype.displayAction = function(subject, target) {
+        if (subject._lastCommandSymbol === "guard") return;
+        _Window_BattleLog_displayAction.call(this, subject, target);
     };
 
 })();
