@@ -45,7 +45,7 @@
         case 'armor': return DataManager.isArmor(item);
         case TextManager.mod_type: return DataManager.isExtraItem(item, TextManager.mod_type);
         case TextManager.material_type: return DataManager.isExtraItem(item, TextManager.material_type);
-        case 'keyItem': return DataManager.isItem(item) && item.itypeId === 2;
+         case 'keyItem': return DataManager.isItem(item) && item.itypeId === 2;
         default: return false;
         }
     };
@@ -81,5 +81,71 @@
     Scene_Blacksmith.prototype.create = function() {
         Scene_Shop.prototype.create.call(this);
     };
+
+    // TODO: カスタムスキルをセットするシーン
+    // TODO: 戦闘中、カスタムスキルを円で表示
+
+    // TODO: 戦闘中helpウィンドウの位置を変更し、縦幅を1行に
+    // スキル →help → ステータス
+    function Window_BattleHelp() {
+        this.initialize.apply(this, arguments);
+    }
+
+    Window_BattleHelp.prototype = Object.create(Window_Help.prototype);
+    Window_BattleHelp.prototype.constructor = Window_BattleHelp;
+    Window_BattleHelp.prototype.initialize = function(y) {
+        var width = Graphics.boxWidth;
+        var height = this.fittingHeight(1);
+        Window_Base.prototype.initialize.call(this, 0, y - height, width, height);
+        this._text = '';
+    };
+
+    Scene_Battle.prototype.createHelpWindow = function() {
+        var y = this._statusWindow.y;
+        this._helpWindow = new Window_BattleHelp(y);
+        this._helpWindow.close();
+        this.addWindow(this._helpWindow);
+    };
+
+    var _Scene_Battle_startPartyCommandSelection = Scene_Battle.prototype.startPartyCommandSelection;
+    Scene_Battle.prototype.startPartyCommandSelection = function() {
+        _Scene_Battle_startPartyCommandSelection.call(this);
+        this._helpWindow.open();
+    };
+
+    var _Scene_Battle_endCommandSelection = Scene_Battle.prototype.endCommandSelection;
+    Scene_Battle.prototype.endCommandSelection = function() {
+        _Scene_Battle_endCommandSelection.call(this);
+        this._helpWindow.close();
+    };
+
+    Window_BattleItem.prototype.hideHelpWindow = function() {
+        if (this._helpWindow) {
+            this._helpWindow.clear();
+        }
+    };
+
+    Window_BattleSkill.prototype.hideHelpWindow = function() {
+        if (this._helpWindow) {
+            this._helpWindow.clear();
+        }
+    };
+
+    // 敵の位置を上にずらす
+
+    Game_Enemy.prototype.setup = function(enemyId, x, y) {
+        this._enemyId = enemyId;
+        this._screenX = x;
+        this._screenY = y - 100;
+        this.recoverAll();
+    };
+
+    // TODO: コマンド選択時、キャラ名を左上に表示
+    // TODO: 戦闘中、アイテムウィンドウ・スキルウィンドウの幅を小さく(要らないかも)
+    // TODO: 攻撃時、攻撃する自キャラに選択枠を表示する
+    // TODO: HP・MPが満タンならバーの色を変える
+    // TODO: 戦闘で敵選択時、矢印を表示 + 左上に名前表示
+    // TODO: 戦闘時、全体技を使う時も敵を選択するフェーズに移行(全員に矢印が付いている状態)
+    // TODO: 戦闘開始時の遷移が目に悪いのでどうにかする
 
 })();
