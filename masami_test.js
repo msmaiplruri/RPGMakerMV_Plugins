@@ -45,7 +45,7 @@
         case 'armor': return DataManager.isArmor(item);
         case TextManager.mod_type: return DataManager.isExtraItem(item, TextManager.mod_type);
         case TextManager.material_type: return DataManager.isExtraItem(item, TextManager.material_type);
-         case 'keyItem': return DataManager.isItem(item) && item.itypeId === 2;
+        case 'keyItem': return DataManager.isItem(item) && item.itypeId === 2;
         default: return false;
         }
     };
