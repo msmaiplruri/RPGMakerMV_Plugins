@@ -81,60 +81,6 @@
         Scene_Shop.prototype.create.call(this);
     };
 
-    // 戦闘中helpウィンドウの位置を変更し、縦幅を1行に
-    // スキル →help → ステータス
-    function Window_BattleHelp() {
-        this.initialize.apply(this, arguments);
-    }
-
-    Window_BattleHelp.prototype = Object.create(Window_Help.prototype);
-    Window_BattleHelp.prototype.constructor = Window_BattleHelp;
-    Window_BattleHelp.prototype.initialize = function(y) {
-        var width = Graphics.boxWidth;
-        var height = this.fittingHeight(1);
-        Window_Base.prototype.initialize.call(this, 0, y - height, width, height);
-        this._text = '';
-    };
-
-    Scene_Battle.prototype.createHelpWindow = function() {
-        var y = this._statusWindow.y;
-        this._helpWindow = new Window_BattleHelp(y);
-        this._helpWindow.close();
-        this.addWindow(this._helpWindow);
-    };
-
-    var _Scene_Battle_startPartyCommandSelection = Scene_Battle.prototype.startPartyCommandSelection;
-    Scene_Battle.prototype.startPartyCommandSelection = function() {
-        _Scene_Battle_startPartyCommandSelection.call(this);
-        this._helpWindow.open();
-    };
-
-    var _Scene_Battle_endCommandSelection = Scene_Battle.prototype.endCommandSelection;
-    Scene_Battle.prototype.endCommandSelection = function() {
-        _Scene_Battle_endCommandSelection.call(this);
-        this._helpWindow.close();
-    };
-
-    Window_BattleItem.prototype.hideHelpWindow = function() {
-        if (this._helpWindow) {
-            this._helpWindow.clear();
-        }
-    };
-
-    Window_BattleSkill.prototype.hideHelpWindow = function() {
-        if (this._helpWindow) {
-            this._helpWindow.clear();
-        }
-    };
-
-    // 敵の位置を上にずらす
-    Game_Enemy.prototype.setup = function(enemyId, x, y) {
-        this._enemyId = enemyId;
-        this._screenX = x;
-        this._screenY = y - 100;
-        this.recoverAll();
-    };
-
     // TODO: 戦闘時、味方のステータス表示をキャラそれぞれ1つのwindowにし、キャラチップも表示
     // TODO: 戦闘中、カスタムスキルを円で表示
     // TODO: コマンド選択時、キャラ名を左上に表示
