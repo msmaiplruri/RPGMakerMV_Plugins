@@ -28,7 +28,7 @@
 
     // Scene_Custom
     // TODO: コマンド位置記憶
-
+    // TODO: カスタムにセットしたアイテムが、店での持っている数に表示されてない -> カスタムは別個表示を出す？
     function Scene_Custom() {
         this.initialize.apply(this, arguments);
     };
@@ -624,6 +624,12 @@
         this.open();
     };
 
+    // cost表示のためwindowを広げる
+    // TODO: 長い文字列に対応する
+    Window_ActorCommand.prototype.windowWidth = function() {
+        return 240;
+    };
+
     Window_ActorCommand.prototype.numVisibleRows = function() {
         var customs = this._actor ? this._actor.customs().filter(function(custom) {
             return !custom.isNull();
@@ -686,6 +692,7 @@
     };
 
     // カスタムコマンドの説明をhelpWindowに表示する
+    // TODO: 武器の説明が表示されていない
     Window_ActorCommand.prototype.updateHelp = function() {
         Window_Command.prototype.updateHelp.call(this);
         this.setHelpWindowItem(this.item().object());
@@ -699,7 +706,6 @@
     };
 
     // 戦闘中もMPコスト、アイテムかどうかを表示
-    // TODO: cost表示のためwindowを広げる
     Window_ActorCommand.prototype.drawItem = function(index) {
             var rect = this.itemRectForText(index);
             var align = this.itemTextAlign();
