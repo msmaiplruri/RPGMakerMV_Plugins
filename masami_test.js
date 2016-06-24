@@ -140,6 +140,13 @@
         this.recoverAll();
     };
 
+    // 防御の時、ログを非表示
+    var _Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
+    Window_BattleLog.prototype.displayAction = function(subject, target) {
+        if (subject._lastCommandSymbol === "guard") return;
+        _Window_BattleLog_displayAction.call(this, subject, target);
+    };
+
     // TODO: コマンド選択時、キャラ名を左上に表示
     // TODO: 戦闘中、アイテムウィンドウ・スキルウィンドウの幅を小さく(要らないかも)
     // TODO: 攻撃時、攻撃する自キャラに選択枠を表示する
@@ -147,5 +154,6 @@
     // TODO: 戦闘で敵選択時、矢印を表示 + 左上に名前表示
     // TODO: 戦闘時、全体技を使う時も敵を選択するフェーズに移行(全員に矢印が付いている状態)
     // TODO: 戦闘開始時の遷移が目に悪いのでどうにかする
+    // TODO: 全体技なら全体を選択
 
 })();
