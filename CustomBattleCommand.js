@@ -544,8 +544,6 @@
     };
 
     // 戦闘時、カスタムからコマンドを選ぶようにする
-    // TODO: MPコスト、アイテムかどうか表示
-
     var _Scene_Battle_createAllWindows = Scene_Battle.prototype.createAllWindows;
     Scene_Battle.prototype.createAllWindows = function() {
         _Scene_Battle_createAllWindows.call(this);
@@ -575,7 +573,6 @@
 
     Scene_Battle.prototype.commandCustom = function(custom, index) {
         var c = custom.object();
-        console.log(index);
         if (custom.isSkill()) {
             BattleManager.inputtingAction().setSkill(c.id);
         } else if (custom.isItem()) {
@@ -587,7 +584,6 @@
 
     Scene_Battle.prototype.onSelectAction = function() {
         var action = BattleManager.inputtingAction();
-        // TODO: 全体技なら全体を選択
         if (!action.needsSelection()) {
             this.selectNextCommand();
         } else if (action.isForOpponent()) {
@@ -643,13 +639,6 @@
         }
     };
 
-    // 「攻撃」を所持武器名にする
-    Window_ActorCommand.prototype.addAttackCommand = function() {
-        var first = this._actor.equips()[0];
-        var weapon = first ? first.name : "素手"
-        this.addCommand(weapon, 'attack', this._actor.canAttack());
-    };
-
     Window_ActorCommand.prototype.addCustomCommand = function() {
         var customs = this._actor.customs().filter(function(custom) {
             return !custom.isNull();
@@ -666,25 +655,83 @@
     };
 
     Window_ActorCommand.prototype.item = function() {
+        // 「戦う」を除くので -1する
         var index = this.index() - 1;
         var customs = this._actor.customs().filter(function(custom) {
             return !custom.isNull();
         }, this);
-        if (index < 0 || index >= customs.length || !this._actor) return null;
-        return customs[index].object();
+        if (index < 0 || index >= customs.length || !this._actor) return new Game_Item();
+        return customs[index];
+    };
+
+    // カスタムコマンドのアイテムを取得
+    Window_ActorCommand.prototype.item = function() {
+        // 「戦う」を除くので -1する
+        var index = this.index() - 1;
+        var customs = this._actor.customs().filter(function(custom) {
+            return !custom.isNull();
+        }, this);
+        if (index < 0 || index >= customs.length || !this._actor) return new Game_Item();
+        return customs[index];
+    };
+
+    Window_ActorCommand.prototype.item_with_index = function(index) {
+        // 「戦う」を除くので -1する
+        index--;
+        var customs = this._actor.customs().filter(function(custom) {
+            return !custom.isNull();
+        }, this);
+        if (index < 0 || index >= customs.length || !this._actor) return new Game_Item();
+        return customs[index];
     };
 
     // カスタムコマンドの説明をhelpWindowに表示する
     Window_ActorCommand.prototype.updateHelp = function() {
         Window_Command.prototype.updateHelp.call(this);
-        this.setHelpWindowItem(this.item());
+        this.setHelpWindowItem(this.item().object());
     };
 
-    // 防御の時、ログを非表示
-    var _Window_BattleLog_displayAction = Window_BattleLog.prototype.displayAction;
-    Window_BattleLog.prototype.displayAction = function(subject, target) {
-        if (subject._lastCommandSymbol === "guard") return;
-        _Window_BattleLog_displayAction.call(this, subject, target);
+    // 「攻撃」を所持武器名にする
+    Window_ActorCommand.prototype.addAttackCommand = function() {
+        var first = this._actor.equips()[0];
+        var weapon = first ? first.name : "素手"
+        this.addCommand(weapon, 'attack', this._actor.canAttack());
+    };
+
+    // 戦闘中もMPコスト、アイテムかどうかを表示
+    // TODO: cost表示のためwindowを広げる
+    Window_ActorCommand.prototype.drawItem = function(index) {
+            var rect = this.itemRectForText(index);
+            var align = this.itemTextAlign();
+            var item = this.item_with_index(index);
+            this.resetTextColor();
+            this.changePaintOpacity(this.isCommandEnabled(index));
+            this.drawText(this.commandName(index), rect.x, rect.y, rect.width, align);
+            this.drawCost(item, rect.x, rect.y, rect.width);
+    };
+
+    Window_ActorCommand.prototype.drawCost = function(item, x, y, width) {
+        var custom = item.object();
+        if (item.isItem()) {
+            this.drawItemCount(custom, x, y, width, 'right');
+        } else if (item.isSkill()){
+            this.drawSkillCost(custom, x, y, width, 'right');
+        }
+    };
+
+    Window_ActorCommand.prototype.drawItemCount = function(item, x, y, width) {
+        this.changeTextColor(this.tpCostColor());
+        this.drawText("★", x, y, width, 'right');
+    };
+
+    Window_ActorCommand.prototype.drawSkillCost = function(skill, x, y, width) {
+        if (this._actor.skillTpCost(skill) > 0) {
+            this.changeTextColor(this.tpCostColor());
+            this.drawText(this._actor.skillTpCost(skill), x, y, width, 'right');
+        } else if (this._actor.skillMpCost(skill) > 0) {
+            this.changeTextColor(this.mpCostColor());
+            this.drawText(this._actor.skillMpCost(skill), x, y, width, 'right');
+        }
     };
 
 })();
